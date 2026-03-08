@@ -19,11 +19,11 @@ class APIAdapter(BaseApi):
 
     @property
     def aeroplanes(self) -> Any | None:
-        """Метод обращения к данным для их чтения"""
+        """Метод обращения к уже имеющимся данным для их чтения"""
         return self.__aeroplanes
 
     def get_aeroplanes(self, country: str) -> None:
-        """Метод выдачи данных о самолётах"""
+        """Метод выдачи данных о самолётах по координатам"""
         headers_nominatim = {
             'User-Agent': 'test-app/1.0',
         }
@@ -89,12 +89,14 @@ class APIAdapter(BaseApi):
 
 
 if __name__ == '__main__':
-    api = APIAdapter()
-    api.get_aeroplanes('Iran')
-
-    if api.aeroplanes is None:
+    api = APIAdapter()  #  Созд. объект класса.
+    api.get_aeroplanes('Iran')  # Запрос на внешние API(наполняем объект информацией по Ирану).
+    data = api.aeroplanes
+    print(type(data))
+    print(data)
+    if data is None:
         print("Данных о самолётах нет")
     else:
         # api.aeroplanes — dict (ответ JSON от opensky)
-        for inf_plane in api.aeroplanes["states"]:
+        for inf_plane in data["states"]:
             print(inf_plane)

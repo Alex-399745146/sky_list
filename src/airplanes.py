@@ -5,8 +5,9 @@ from __future__ import annotations
 
 from functools import total_ordering
 from typing import Any
-from src.api_clients import APIAdapter
+
 from src.abstract import BaseAeroplane
+from src.api_clients import APIAdapter
 
 
 @total_ordering
@@ -15,7 +16,13 @@ class Aeroplane(BaseAeroplane):
 
     __slots__ = ()  # все слоты уже заданы в BaseAeroplane
 
-    def __init__(self, callsign: str, reg_country: str, velocity: float, altitude: float,) -> None:
+    def __init__(
+        self,
+        callsign: str,
+        reg_country: str,
+        velocity: float,
+        altitude: float,
+    ) -> None:
         # Заводим атрибуты в конструктор применяя методы проверки входных данных.
         callsign = self.__validate_callsign(callsign)
         reg_country = self.__validate_reg_country(reg_country)
@@ -58,10 +65,7 @@ class Aeroplane(BaseAeroplane):
         if not isinstance(other, Aeroplane):
             return NotImplemented
         # считаем самолёты равными, если совпадает скорость и высота
-        return (
-            self.velocity == other.velocity
-            and self.altitude == other.altitude
-        )
+        return self.velocity == other.velocity and self.altitude == other.altitude
 
     def __lt__(self, other: object) -> bool:
         """Метод сравнения < меньше для построения functools"""
@@ -84,8 +88,6 @@ class Aeroplane(BaseAeroplane):
         result: list[Aeroplane] = []
 
         for state in states:
-            # структура массива state смотри в задании курсовой:
-            # [0: icao24, 1: callsign, 2: origin_country, 7: baro_altitude, 9: velocity, ...]
             callsign = state[1] or ""
             reg_country = state[2] or ""
             altitude = state[7] or 0.0
@@ -108,10 +110,8 @@ class Aeroplane(BaseAeroplane):
 
 
 if __name__ == "__main__":
-    from src.api_clients import APIAdapter
-
     api = APIAdapter()
-    api.get_aeroplanes("Iran")
+    api.get_aeroplanes("Canada")
 
     if api.aeroplanes is None:
         print("Данных о самолётах нет")
@@ -123,5 +123,3 @@ if __name__ == "__main__":
         print(p2.callsign, p2.velocity, p2.altitude)
 
         print(p1 > p2)  # сравнение по высоте, затем по скорости
-
-

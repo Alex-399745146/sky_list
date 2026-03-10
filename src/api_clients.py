@@ -86,7 +86,7 @@ class APIAdapter(BaseApi):
         self.__aeroplanes = data_sky
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     api = APIAdapter()
     api.get_aeroplanes("Iran")
     data = api.aeroplanes

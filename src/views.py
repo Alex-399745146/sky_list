@@ -37,7 +37,7 @@ def load_aeroplanes_by_country(country: str) -> list[Aeroplane]:
 
 
 def filter_aeroplanes(aeroplanes: Iterable[Aeroplane], reg_countries: list[str]) -> list[Aeroplane]:
-    """Фильтрация самолётов по стране регистрации (origin_country)."""
+    """Фильтрация самолётов по стране регистрации (origin_country)"""
     if not reg_countries:
         return list(aeroplanes)
 
@@ -81,7 +81,7 @@ def get_top_aeroplanes(aeroplanes: Iterable[Aeroplane], top_n: int) -> list[Aero
     return list(aeroplanes)[:top_n]
 
 
-def print_aeroplanes(aeroplanes: Iterable[Aeroplane]) -> None:
+def print_aeroplanes(aeroplanes: Iterable[Aeroplane]) -> None:  # pragma: no cover
     """Функция вывода заглавия данных в таблице"""
     header = f"{'ID борта':<15}" f"{'Страна регистрации':<28}" f"{'Скорость (м/с)':>15}" f"{'Высота (м)':>15}"
     print(header)

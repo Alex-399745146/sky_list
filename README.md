@@ -20,16 +20,39 @@ nominatim.openstreetmap.org и opensky-network.org, фильтрации, сор
 ## 1. Описание проекта
 
 Программа с терминальным меню, которая собирает данные о самолётах в воздушных
-пространствах выбранных пользователем стран.
+пространствах выбранных пользователем стран и сохраняет результат в JSON-файл.
 
-### 1.1. Стек технологий
+### 1.1. Требования к окружению
 
-```text
-#magic_method #requests #API #pandas #ООП (абстрактные классы, множественное наследование)
+Перед установкой проекта на ПК должны быть установлены не ниже:
+```markdown
+- Python 3.13
+- Poetry
+- Git
 ```
+### 1.2. Проверка установленных версий
+
+В терминале (CMD / PowerShell / Git Bash) используйте команды:
 
 
-### 1.2. API key
+```markdown
+python --version      # версия Python
+```
+```markdown
+py -0                 # список установленных версий Python (Windows)
+```
+```markdown
+poetry --version      # версия Poetry
+```
+```markdown
+git --version         # версия Git
+```
+```markdown
+git config --global user.name  # проверка, настроено ли имя пользователя в Git
+```
+Если какая-то команда не находится или версия Python меньше 3.13, нужно сначала установить/обновить соответствующий инструмент.
+
+### 1.4. API key
 
 Сервисы используют открытый API, ключи не требуются, что упрощает запуск приложения.
 
@@ -39,19 +62,20 @@ nominatim.openstreetmap.org и opensky-network.org, фильтрации, сор
 
 ### 2.1. Установка
 
-```bash
-git clone https://github.com/<твой-логин>/sky_list.git
+Клонируем проект к себе
+```markdown
+git clone https://github.com/Alex-399745146/sky_list.git
 ```
-
-```bash
+Входим в корневую папку проекта
+```markdown
 cd sky_list
 ```
-
-```bash
+В корневую папку устанавливаем все зависимости проекта
+```markdown
 poetry install
 ```
 ### 2.2. Запускаем
-```bash
+```markdown
 poetry run python main.py
 ```
 
@@ -81,35 +105,11 @@ poetry run python main.py
 
 ---
 
-## 5. Технологии
-
-```markdown
-* Python 3.13
-* Poetry
-* requests, pytest, pytest-cov, mypy, flake8, black, isort
-```
-### 5.1. Тестирование и проверка стиля
-
-```bash
-poetry run pytest
-```
-```bash
-poetry run pytest --cov=src
-````
-```bash
-poetry run mypy .
-```
-```bash
-poetry run flake8 .
-```
-
----
-
-## 6. Лицензия
+## 5. Лицензия
 
 Учебная работа по итогу окончания учебного модуля по ООП
 
-### 6.1. Автор
+### 5.1. Автор
 
 Александр Бачевский (Alex Bachevskiy)
 
@@ -119,7 +119,7 @@ Email: [bachevskiyaa@bk.ru](bachevskiyaa@bk.ru)
 
 Email (Gmail): [bachevskiiaa@gmail.com](bachevskiiaa@gmail.com)
 
-### 6.2. Лицензия
+### 5.2. Лицензия
 Учебный проект.
 
 ---

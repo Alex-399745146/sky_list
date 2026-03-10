@@ -108,8 +108,11 @@ class Aeroplane(BaseAeroplane):
 
         return result
 
+    def __str__(self) -> str:
+        return f"{self.callsign}, {self.reg_country}, {self.velocity}, {self.altitude}"
 
-if __name__ == "__main__":
+
+if __name__ == "__main__":  # pragma: no cover
     api = APIAdapter()
     api.get_aeroplanes("Canada")
 

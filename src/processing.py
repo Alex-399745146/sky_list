@@ -104,7 +104,7 @@ class Processing(BaseProcessing):
         self._write_all(to_keep)
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     from src.airplanes import Aeroplane
 
     storage = Processing()

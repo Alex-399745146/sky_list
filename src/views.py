@@ -76,6 +76,7 @@ def show_aeroplanes(storage: Processing, console: Console) -> None:
 
     console.print(table)
 
+
 def load_aeroplanes_by_country(country: str) -> list[Aeroplane]:
     """Загружает и преобразует данные о самолётах для указанной страны."""
     api = APIAdapter()
@@ -103,6 +104,7 @@ def load_aeroplanes_by_country(country: str) -> list[Aeroplane]:
 
     return planes
 
+
 def filter_aeroplanes(aeroplanes: Iterable[Aeroplane], reg_countries: list[str]) -> list[Aeroplane]:
     """Фильтрация самолётов по стране регистрации (origin_country)"""
     if not reg_countries:
@@ -110,6 +112,7 @@ def filter_aeroplanes(aeroplanes: Iterable[Aeroplane], reg_countries: list[str])
 
     reg_countries_norm = {c.strip().lower() for c in reg_countries if c.strip()}
     return [plane for plane in aeroplanes if plane.reg_country.lower() in reg_countries_norm]
+
 
 def parse_altitude_range(raw: str) -> tuple[float, float]:
     """Парсит строку диапазона высот вида '1000-2000' или '1000 - 2000'."""
@@ -127,10 +130,12 @@ def parse_altitude_range(raw: str) -> tuple[float, float]:
         low, high = high, low
     return low, high
 
+
 def get_aeroplanes_by_altitude(aeroplanes: Iterable[Aeroplane], altitude_range: str) -> list[Aeroplane]:
     """Фильтрация самолётов по диапазону высот."""
     low, high = parse_altitude_range(altitude_range)
     return [plane for plane in aeroplanes if low <= plane.altitude <= high]
+
 
 def sort_aeroplanes(aeroplanes: Iterable[Aeroplane]) -> list[Aeroplane]:
     """
@@ -139,9 +144,11 @@ def sort_aeroplanes(aeroplanes: Iterable[Aeroplane]) -> list[Aeroplane]:
     """
     return sorted(aeroplanes, reverse=True)  # от большего к меньшему (высота, потом скорость)
 
+
 def get_top_aeroplanes(aeroplanes: Iterable[Aeroplane], top_n: int) -> list[Aeroplane]:
     """Возвращает топ N самолётов из уже отсортированного списка."""
     return list(aeroplanes)[:top_n]
+
 
 def print_aeroplanes(aeroplanes: Iterable[Aeroplane]) -> None:  # pragma: no cover
     """Функция вывода заглавия данных в таблице"""
@@ -151,6 +158,7 @@ def print_aeroplanes(aeroplanes: Iterable[Aeroplane]) -> None:  # pragma: no cov
 
     for plane in aeroplanes:
         print(f"{plane.callsign:<15}" f"{plane.reg_country:<28}" f"{plane.velocity:15.2f}" f"{plane.altitude:15.2f}")
+
 
 def user_interaction(
     storage: Processing,

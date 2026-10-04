@@ -25,8 +25,9 @@ def configure_logging() -> None:
 
 def load_aeroplanes(country: str, storage: Processing) -> None:
     """Загружает, нормализует и сохраняет самолёты указанной страны."""
-
     api = APIAdapter()
+    aeroplanes: list[Aeroplane] = []
+    added_count = 0
 
     with Progress(
         SpinnerColumn(),
@@ -42,36 +43,42 @@ def load_aeroplanes(country: str, storage: Processing) -> None:
 
         api.get_aeroplanes(country)
 
-        raw_data = api.aeroplanes or {}
+        if not api.error_message:
+            raw_data = api.aeroplanes or {}
 
-        progress.update(
-            task_id,
-            description="Нормализуем данные самолётов",
+            progress.update(
+                task_id,
+                description="Нормализуем данные самолётов",
+            )
+
+            aeroplanes = Aeroplane.get_filter_aeroplanes(raw_data)
+
+            aeroplanes_data = [
+                {
+                    "callsign": plane.callsign,
+                    "reg_country": plane.reg_country,
+                    "velocity": plane.velocity,
+                    "altitude": plane.altitude,
+                }
+                for plane in aeroplanes
+            ]
+
+            progress.update(
+                task_id,
+                description="Сохраняем данные в хранилище",
+            )
+
+            added_count = storage.add_aeroplanes(aeroplanes_data)
+
+    if api.error_message:
+        console.print(
+            Panel(
+                f"[red]{api.error_message}[/red]",
+                title="Ошибка загрузки",
+                border_style="red",
+            )
         )
-
-        aeroplanes = Aeroplane.get_filter_aeroplanes(raw_data)
-
-        progress.update(
-            task_id,
-            description="Сохраняем данные в хранилище",
-        )
-
-        aeroplanes_data = [
-            {
-                "callsign": plane.callsign,
-                "reg_country": plane.reg_country,
-                "velocity": plane.velocity,
-                "altitude": plane.altitude,
-            }
-            for plane in aeroplanes
-        ]
-
-        progress.update(
-            task_id,
-            description="Сохраняем данные в хранилище",
-        )
-
-        added_count = storage.add_aeroplanes(aeroplanes_data)
+        return
 
     if not aeroplanes:
         console.print(

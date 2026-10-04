@@ -1,7 +1,11 @@
 # views.py
-"""Модуль вспомогательных функций вывода информации для представления"""
+"""Модуль консольного интерфейса."""
 
+from collections.abc import Callable
 from typing import Iterable
+
+from rich.console import Console
+from rich.prompt import Prompt
 
 from src.airplanes import Aeroplane
 from src.api_clients import APIAdapter
@@ -91,27 +95,32 @@ def print_aeroplanes(aeroplanes: Iterable[Aeroplane]) -> None:  # pragma: no cov
         print(f"{plane.callsign:<15}" f"{plane.reg_country:<28}" f"{plane.velocity:15.2f}" f"{plane.altitude:15.2f}")
 
 
-def user_interaction() -> None:
-    """Функция взаимодействия с пользователем, функция использует функции а те используют экземпляры классов"""
-    country = input("Введите название страны для запроса к API: ").strip()
-    top_n = int(input("Введите количество самолётов для вывода в топ N: ").strip())
-    filter_words = input("Введите названия стран регистрации (через пробел) для фильтрации: ").split()
-    altitude_range = input("Введите диапазон высот полёта (например: 1000-15000): ").strip()
+def user_interaction(
+    storage: Processing,
+    load_aeroplanes: Callable[[str, Processing], None],
+    console: Console,
+) -> None:
+    """Запускает интерактивное меню приложения."""
 
-    # 1. Загружаем самолёты по стране
-    aeroplanes = load_aeroplanes_by_country(country)
-    if not aeroplanes:
-        return
+    while True:
+        console.print("\n[bold cyan]Sky List[/bold cyan]")
+        console.print("1. Загрузить самолёты по стране")
+        console.print("0. Выйти")
 
-    # 2. Фильтрация по стране регистрации
-    filtered_aeroplanes = filter_aeroplanes(aeroplanes, filter_words)
+        choice = Prompt.ask(
+            "Выберите действие",
+            choices=["0", "1"],
+        )
 
-    # 3. Фильтрация по диапазону высот
-    ranged_aeroplanes = get_aeroplanes_by_altitude(filtered_aeroplanes, altitude_range)
+        if choice == "0":
+            console.print("[green]Работа программы завершена.[/green]")
+            break
 
-    # 4. Сортировка и выбор топ N
-    sorted_aeroplanes = sort_aeroplanes(ranged_aeroplanes)
-    top_aeroplanes = get_top_aeroplanes(sorted_aeroplanes, top_n)
+        if choice == "1":
+            country = Prompt.ask("Введите страну").strip()
 
-    # 5. Вывод
-    print_aeroplanes(top_aeroplanes)
+            if not country:
+                console.print("[red]Название страны не должно быть пустым.[/red]")
+                continue
+
+            load_aeroplanes(country, storage)

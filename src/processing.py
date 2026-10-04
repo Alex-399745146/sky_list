@@ -1,4 +1,4 @@
-# processing.py
+# src/processing.py
 """Модуль классов операционистов"""
 
 import json
@@ -11,8 +11,10 @@ class Processing(BaseProcessing):
     """Класс для сохранения информации о самолётах в JSON-файл."""
 
     def _read_all(self) -> list[dict[str, Any]]:
+        """Функция чтения данных из файла."""
         if not self.file_path.exists():
             return []
+
         with self.file_path.open("r", encoding="utf-8") as f:
             try:
                 data = json.load(f)
@@ -20,11 +22,17 @@ class Processing(BaseProcessing):
                 return []
         if not isinstance(data, list):
             return []
+
         return data
 
     def _write_all(self, data: list[dict[str, Any]]) -> None:
+        """Функция записи данных в файл."""
         with self.file_path.open("w", encoding="utf-8") as f:
             json.dump(data, f, ensure_ascii=False, indent=2)
+
+    def clear_storage(self) -> None:
+        """Очищает данные локального хранилища."""
+        self._write_all([])
 
     def add_aeroplane(self, aeroplane_data: dict[str, Any]) -> None:
         """Добавить запись о самолёте в JSON-файл, избегая дублей."""

@@ -1,13 +1,14 @@
 [project]
 name = "sky-list"
 version = "0.1.0"
-description = "Курсовой проект: sky_list"
+description = "Консольное приложение sky_list о воздушных суднах."
 authors = [
     {name = "Alexsandr Bachevskiy",email = "bachevskiiaa@gmail.com"}
 ]
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
+    "rich (>=15.0.0,<16.0.0)"
 ]
 
 [tool.poetry]

@@ -1,4 +1,4 @@
-# abstract.py
+# src/abstract.py
 """Модуль с абстрактными классами"""
 
 from __future__ import annotations
@@ -99,4 +99,9 @@ class BaseProcessing(ABC):
     @abstractmethod
     def delete_aeroplanes(self, **criteria: Any) -> None:
         """Удалить информацию о самолётах в файле по указанным критериям"""
+        raise NotImplementedError
+
+    @abstractmethod
+    def clear_storage(self) -> None:
+        """Очистить локальное хранилище данных."""
         raise NotImplementedError

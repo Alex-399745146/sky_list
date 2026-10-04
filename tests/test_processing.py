@@ -50,3 +50,24 @@ def test_delete_aeroplanes_by_country(tmp_path):
     remaining = storage.get_aeroplanes()
     assert len(remaining) == 1
     assert remaining[0]["reg_country"] == "Russia"
+
+
+def test_clear_storage(tmp_path) -> None:
+    """Проверка очистки данных локального хранилища."""
+    storage = Processing()
+    storage._file_path = tmp_path / "aeroplanes.json"
+
+    storage.add_aeroplane(
+        {
+            "callsign": "UAE41P",
+            "reg_country": "United Arab Emirates",
+            "velocity": 73.14,
+            "altitude": 68.58,
+        }
+    )
+
+    assert len(storage.get_aeroplanes()) == 1
+
+    storage.clear_storage()
+
+    assert storage.get_aeroplanes() == []

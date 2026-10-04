@@ -2,8 +2,13 @@
 """Тест функций модуля views"""
 
 from src.airplanes import Aeroplane
-from src.views import (filter_aeroplanes, get_aeroplanes_by_altitude, get_top_aeroplanes, load_aeroplanes_by_country,
-                       sort_aeroplanes)
+from src.views import (
+    filter_aeroplanes,
+    get_aeroplanes_by_altitude,
+    get_top_aeroplanes,
+    load_aeroplanes_by_country,
+    sort_aeroplanes,
+)
 
 
 def test_load_aeroplanes_by_country():

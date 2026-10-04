@@ -50,6 +50,8 @@ allow_untyped_defs = true # переопределение настройки
 
 [tool.black]
 line-length = 119
+target-version = ["py313"]
+
 exclude = '''
 (
   /(

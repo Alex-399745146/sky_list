@@ -2,48 +2,41 @@
 """Модуль консольного интерфейса."""
 
 from collections.abc import Callable
-from typing import Iterable
-
+from typing import Any
 
 from rich.console import Console
 from rich.panel import Panel
+from rich.progress import BarColumn, MofNCompleteColumn, Progress, SpinnerColumn, TextColumn, TimeElapsedColumn
 from rich.prompt import Prompt
 from rich.table import Table
-from rich.progress import (
-    BarColumn,
-    MofNCompleteColumn,
-    Progress,
-    SpinnerColumn,
-    TextColumn,
-    TimeElapsedColumn,
-)
 
-from src.airplanes import Aeroplane
-from src.api_clients import APIAdapter
+from src.analytics import filter_aeroplanes_by_keyword, sort_aeroplanes
 from src.processing import Processing
 
 
-def show_aeroplanes(storage: Processing, console: Console) -> None:
-    """Выводит сохранённые самолёты в таблице Rich."""
-    aeroplanes = storage.get_aeroplanes()
-
+def show_aeroplanes(
+    aeroplanes: list[dict[str, Any]],
+    console: Console,
+    title: str,
+) -> None:
+    """Выводит список самолётов в таблице Rich."""
     if not aeroplanes:
         console.print(
             Panel(
-                "[yellow]В текущем сеансе ещё нет сохранённых самолётов.[/yellow]",
-                title="Список самолётов",
+                "[yellow]Самолёты по указанным критериям не найдены.[/yellow]",
+                title=title,
                 border_style="yellow",
             )
         )
         return
 
     table = Table(
-        title=f"Сохранённые самолёты: {len(aeroplanes)}",
+        title=f"{title}: {len(aeroplanes)}",
         header_style="bold cyan",
         show_lines=True,
     )
 
-    table.add_column("#", justify="right", style="dim", no_wrap=True)
+    table.add_column("№", justify="right", style="dim", no_wrap=True)
     table.add_column("Позывной", style="bold green")
     table.add_column("Страна регистрации", style="yellow")
     table.add_column("Скорость, м/с", justify="right", style="red")
@@ -77,87 +70,60 @@ def show_aeroplanes(storage: Processing, console: Console) -> None:
     console.print(table)
 
 
-def load_aeroplanes_by_country(country: str) -> list[Aeroplane]:
-    """Загружает и преобразует данные о самолётах для указанной страны."""
-    api = APIAdapter()
-    api.get_aeroplanes(country)
+def filter_and_sort_aeroplanes(
+    storage: Processing,
+    console: Console,
+) -> None:
+    """Фильтрует самолёты по ключевому слову и сортирует результат."""
+    keyword = Prompt.ask(
+        "Введите ключевое слово " "[dim](позывной или страна; Enter — без фильтра)[/dim]",
+        default="",
+    )
 
-    if api.aeroplanes is None:
-        print("Данных о самолётах нет")
-        return []
+    console.print("\n[bold cyan]Варианты сортировки:[/bold cyan]")
+    console.print("1. По позывному: А–Я")
+    console.print("2. По высоте: ниже → выше")
+    console.print("3. По высоте: выше → ниже")
+    console.print("4. По скорости: медленнее → быстрее")
+    console.print("5. По скорости: быстрее → медленнее")
 
-    # Преобразование массива данных в список объектов Aeroplane
-    planes = Aeroplane.get_filter_aeroplanes(api.aeroplanes)
+    choice = Prompt.ask(
+        "Выберите вариант сортировки",
+        choices=["1", "2", "3", "4", "5"],
+    )
 
-    # Сохраняем все самолёты в JSON
-    storage = Processing()
-    for plane in planes:
+    sort_options = {
+        "1": ("callsign", False),
+        "2": ("altitude", False),
+        "3": ("altitude", True),
+        "4": ("velocity", False),
+        "5": ("velocity", True),
+    }
 
-        storage.add_aeroplane(
-            {
-                "callsign": plane.callsign,
-                "reg_country": plane.reg_country,
-                "velocity": plane.velocity,
-                "altitude": plane.altitude,
-            }
-        )
+    sort_by, reverse = sort_options[choice]
 
-    return planes
+    aeroplanes = storage.get_aeroplanes()
+    filtered_aeroplanes = filter_aeroplanes_by_keyword(
+        aeroplanes,
+        keyword,
+    )
 
+    sorted_aeroplanes = sort_aeroplanes(
+        filtered_aeroplanes,
+        sort_by=sort_by,
+        reverse=reverse,
+    )
 
-def filter_aeroplanes(aeroplanes: Iterable[Aeroplane], reg_countries: list[str]) -> list[Aeroplane]:
-    """Фильтрация самолётов по стране регистрации (origin_country)"""
-    if not reg_countries:
-        return list(aeroplanes)
+    title = "Результат фильтрации и сортировки"
 
-    reg_countries_norm = {c.strip().lower() for c in reg_countries if c.strip()}
-    return [plane for plane in aeroplanes if plane.reg_country.lower() in reg_countries_norm]
+    if keyword.strip():
+        title = f"Результат поиска: {keyword.strip()}"
 
-
-def parse_altitude_range(raw: str) -> tuple[float, float]:
-    """Парсит строку диапазона высот вида '1000-2000' или '1000 - 2000'."""
-    raw = raw.strip()
-    if not raw:
-        # Пустая строка — без ограничений по высоте
-        return float("-inf"), float("inf")
-
-    parts = raw.replace(" ", "").split("-")
-    if len(parts) != 2:
-        raise ValueError("Диапазон высот должен быть в формате: min-max")
-
-    low, high = map(float, parts)
-    if low > high:
-        low, high = high, low
-    return low, high
-
-
-def get_aeroplanes_by_altitude(aeroplanes: Iterable[Aeroplane], altitude_range: str) -> list[Aeroplane]:
-    """Фильтрация самолётов по диапазону высот."""
-    low, high = parse_altitude_range(altitude_range)
-    return [plane for plane in aeroplanes if low <= plane.altitude <= high]
-
-
-def sort_aeroplanes(aeroplanes: Iterable[Aeroplane]) -> list[Aeroplane]:
-    """
-    Сортировка самолётов, поскольку в Aeroplane реализованы __lt__/__eq__...,
-    sorted() может использовать их напрямую.
-    """
-    return sorted(aeroplanes, reverse=True)  # от большего к меньшему (высота, потом скорость)
-
-
-def get_top_aeroplanes(aeroplanes: Iterable[Aeroplane], top_n: int) -> list[Aeroplane]:
-    """Возвращает топ N самолётов из уже отсортированного списка."""
-    return list(aeroplanes)[:top_n]
-
-
-def print_aeroplanes(aeroplanes: Iterable[Aeroplane]) -> None:  # pragma: no cover
-    """Функция вывода заглавия данных в таблице"""
-    header = f"{'ID борта':<15}" f"{'Страна регистрации':<28}" f"{'Скорость (м/с)':>15}" f"{'Высота (м)':>15}"
-    print(header)
-    print("-" * len(header))
-
-    for plane in aeroplanes:
-        print(f"{plane.callsign:<15}" f"{plane.reg_country:<28}" f"{plane.velocity:15.2f}" f"{plane.altitude:15.2f}")
+    show_aeroplanes(
+        aeroplanes=sorted_aeroplanes,
+        console=console,
+        title=title,
+    )
 
 
 def user_interaction(
@@ -166,16 +132,16 @@ def user_interaction(
     console: Console,
 ) -> None:
     """Запускает интерактивное меню приложения."""
-
     while True:
         console.print("\n[bold cyan]Sky List[/bold cyan]")
         console.print("1. Загрузить самолёты по стране")
         console.print("2. Показать сохранённые самолёты")
+        console.print("3. Фильтровать и сортировать самолёты")
         console.print("0. Выйти")
 
         choice = Prompt.ask(
             "Выберите действие",
-            choices=["0", "1", "2"],
+            choices=["0", "1", "2", "3"],
         )
 
         if choice == "0":
@@ -192,4 +158,11 @@ def user_interaction(
             load_aeroplanes(country, storage)
 
         if choice == "2":
-            show_aeroplanes(storage, console)
+            show_aeroplanes(
+                aeroplanes=storage.get_aeroplanes(),
+                console=console,
+                title="Сохранённые самолёты",
+            )
+
+        if choice == "3":
+            filter_and_sort_aeroplanes(storage, console)

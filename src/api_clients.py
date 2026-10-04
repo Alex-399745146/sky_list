@@ -2,10 +2,11 @@
 """Модуль с классами для работы по внешним API"""
 
 import logging
+from json import JSONDecodeError
 from typing import Any, Dict, Union
 
 from requests import RequestException, Response, get
-from json import JSONDecodeError
+
 from src.abstract import BaseApi
 
 logger = logging.getLogger(__name__)

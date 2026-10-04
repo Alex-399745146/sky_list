@@ -4,13 +4,77 @@
 from collections.abc import Callable
 from typing import Iterable
 
+
 from rich.console import Console
+from rich.panel import Panel
 from rich.prompt import Prompt
+from rich.table import Table
+from rich.progress import (
+    BarColumn,
+    MofNCompleteColumn,
+    Progress,
+    SpinnerColumn,
+    TextColumn,
+    TimeElapsedColumn,
+)
 
 from src.airplanes import Aeroplane
 from src.api_clients import APIAdapter
 from src.processing import Processing
 
+
+def show_aeroplanes(storage: Processing, console: Console) -> None:
+    """Выводит сохранённые самолёты в таблице Rich."""
+    aeroplanes = storage.get_aeroplanes()
+
+    if not aeroplanes:
+        console.print(
+            Panel(
+                "[yellow]В текущем сеансе ещё нет сохранённых самолётов.[/yellow]",
+                title="Список самолётов",
+                border_style="yellow",
+            )
+        )
+        return
+
+    table = Table(
+        title=f"Сохранённые самолёты: {len(aeroplanes)}",
+        header_style="bold cyan",
+        show_lines=True,
+    )
+
+    table.add_column("#", justify="right", style="dim", no_wrap=True)
+    table.add_column("Позывной", style="bold green")
+    table.add_column("Страна регистрации", style="yellow")
+    table.add_column("Скорость, м/с", justify="right", style="red")
+    table.add_column("Высота, м", justify="right", style="blue")
+
+    with Progress(
+        SpinnerColumn(),
+        TextColumn("[progress.description]{task.description}"),
+        BarColumn(),
+        MofNCompleteColumn(),
+        TimeElapsedColumn(),
+        console=console,
+        transient=True,
+    ) as progress:
+        task_id = progress.add_task(
+            description="Формируем таблицу самолётов",
+            total=len(aeroplanes),
+        )
+
+        for number, plane in enumerate(aeroplanes, start=1):
+            table.add_row(
+                str(number),
+                str(plane.get("callsign", "—")),
+                str(plane.get("reg_country", "—")),
+                f"{float(plane.get('velocity', 0.0)):.2f}",
+                f"{float(plane.get('altitude', 0.0)):.2f}",
+            )
+
+            progress.advance(task_id)
+
+    console.print(table)
 
 def load_aeroplanes_by_country(country: str) -> list[Aeroplane]:
     """Загружает и преобразует данные о самолётах для указанной страны."""
@@ -39,7 +103,6 @@ def load_aeroplanes_by_country(country: str) -> list[Aeroplane]:
 
     return planes
 
-
 def filter_aeroplanes(aeroplanes: Iterable[Aeroplane], reg_countries: list[str]) -> list[Aeroplane]:
     """Фильтрация самолётов по стране регистрации (origin_country)"""
     if not reg_countries:
@@ -47,7 +110,6 @@ def filter_aeroplanes(aeroplanes: Iterable[Aeroplane], reg_countries: list[str])
 
     reg_countries_norm = {c.strip().lower() for c in reg_countries if c.strip()}
     return [plane for plane in aeroplanes if plane.reg_country.lower() in reg_countries_norm]
-
 
 def parse_altitude_range(raw: str) -> tuple[float, float]:
     """Парсит строку диапазона высот вида '1000-2000' или '1000 - 2000'."""
@@ -65,12 +127,10 @@ def parse_altitude_range(raw: str) -> tuple[float, float]:
         low, high = high, low
     return low, high
 
-
 def get_aeroplanes_by_altitude(aeroplanes: Iterable[Aeroplane], altitude_range: str) -> list[Aeroplane]:
     """Фильтрация самолётов по диапазону высот."""
     low, high = parse_altitude_range(altitude_range)
     return [plane for plane in aeroplanes if low <= plane.altitude <= high]
-
 
 def sort_aeroplanes(aeroplanes: Iterable[Aeroplane]) -> list[Aeroplane]:
     """
@@ -79,11 +139,9 @@ def sort_aeroplanes(aeroplanes: Iterable[Aeroplane]) -> list[Aeroplane]:
     """
     return sorted(aeroplanes, reverse=True)  # от большего к меньшему (высота, потом скорость)
 
-
 def get_top_aeroplanes(aeroplanes: Iterable[Aeroplane], top_n: int) -> list[Aeroplane]:
     """Возвращает топ N самолётов из уже отсортированного списка."""
     return list(aeroplanes)[:top_n]
-
 
 def print_aeroplanes(aeroplanes: Iterable[Aeroplane]) -> None:  # pragma: no cover
     """Функция вывода заглавия данных в таблице"""
@@ -93,7 +151,6 @@ def print_aeroplanes(aeroplanes: Iterable[Aeroplane]) -> None:  # pragma: no cov
 
     for plane in aeroplanes:
         print(f"{plane.callsign:<15}" f"{plane.reg_country:<28}" f"{plane.velocity:15.2f}" f"{plane.altitude:15.2f}")
-
 
 def user_interaction(
     storage: Processing,
@@ -105,11 +162,12 @@ def user_interaction(
     while True:
         console.print("\n[bold cyan]Sky List[/bold cyan]")
         console.print("1. Загрузить самолёты по стране")
+        console.print("2. Показать сохранённые самолёты")
         console.print("0. Выйти")
 
         choice = Prompt.ask(
             "Выберите действие",
-            choices=["0", "1"],
+            choices=["0", "1", "2"],
         )
 
         if choice == "0":
@@ -124,3 +182,6 @@ def user_interaction(
                 continue
 
             load_aeroplanes(country, storage)
+
+        if choice == "2":
+            show_aeroplanes(storage, console)

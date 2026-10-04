@@ -1,11 +1,15 @@
 # api_clients.py
 """Модуль с классами для работы по внешним API"""
 
+import logging
 from typing import Any, Dict, Union
 
 from requests import Response, get
 
 from src.abstract import BaseApi
+
+logger = logging.getLogger(__name__)
+
 
 ParamsValue = Union[str, int, float]
 
@@ -46,21 +50,31 @@ class APIAdapter(BaseApi):
         )
 
         if response_map.status_code != 200:
-            print(f"От nominatim.openstreetmap.org получен некорректный ответ: " f"{response_map.status_code}")
+            logger.error(
+                "От nominatim.openstreetmap.org получен некорректный ответ: %s",
+                response_map.status_code,
+            )
             self.__aeroplanes = None
             return
 
         data_map = response_map.json()
 
         if not data_map:
-            print("От nominatim.openstreetmap.org пришёл пустой список стран")
+            logger.warning(
+                "От nominatim.openstreetmap.org пришёл пустой список стран (country=%r)",
+                country,
+            )
             self.__aeroplanes = None
             return
 
         geo_coordinates = data_map[0].get("boundingbox")
 
         if not geo_coordinates or len(geo_coordinates) < 4:
-            print("Не удалось получить корректные координаты страны")
+            logger.warning(
+                "Не удалось получить корректные координаты страны (country=%r, data=%r)",
+                country,
+                data_map,
+            )
             self.__aeroplanes = None
             return
 

@@ -3,11 +3,14 @@
 
 from __future__ import annotations
 
+import logging
 from functools import total_ordering
 from typing import Any
 
 from src.abstract import BaseAeroplane
 from src.api_clients import APIAdapter
+
+logger = logging.getLogger(__name__)
 
 
 @total_ordering
@@ -24,8 +27,8 @@ class Aeroplane(BaseAeroplane):
         altitude: float,
     ) -> None:
         # Заводим атрибуты в конструктор применяя методы проверки входных данных.
-        callsign = self.__validate_callsign(callsign)
-        reg_country = self.__validate_reg_country(reg_country)
+        callsign = self.__validate_string(callsign)
+        reg_country = self.__validate_string(reg_country)
         velocity = self.__validate_velocity(velocity)
         altitude = self.__validate_altitude(altitude)
 
@@ -33,14 +36,9 @@ class Aeroplane(BaseAeroplane):
 
     # ===========> Приватные методы проверок входных данных <===========
 
-    def __validate_callsign(self, value: str) -> str:
+    def __validate_string(self, value: str) -> str:
         if not isinstance(value, str) or not value.strip():
-            raise ValueError("callsign пустая строка")
-        return value.strip()
-
-    def __validate_reg_country(self, value: str) -> str:
-        if not isinstance(value, str) or not value.strip():
-            raise ValueError("reg_country пустая строка")
+            raise ValueError("пустая строка")
         return value.strip()
 
     def __validate_velocity(self, value: float) -> float:
@@ -88,20 +86,23 @@ class Aeroplane(BaseAeroplane):
         result: list[Aeroplane] = []
 
         for state in states:
-            callsign = state[1] or ""
-            reg_country = state[2] or ""
-            altitude = state[7] or 0.0
-            velocity = state[9] or 0.0
-
             try:
+                callsign = state[1] or ""
+                reg_country = state[2] or ""
+                altitude = state[7] or 0.0
+                velocity = state[9] or 0.0
+
                 plane = cls(
                     callsign=callsign,
                     reg_country=reg_country,
                     velocity=velocity,
                     altitude=altitude,
                 )
-            except (TypeError, ValueError):
-                # некорректные данные пропускаем
+            except IndexError as e:
+                logger.warning("Некорректный формат записи state=%r: %s", state, e)
+                continue
+            except (TypeError, ValueError) as e:
+                logger.warning("Некорректные значения для Aeroplane из state=%r: %s", state, e)
                 continue
 
             result.append(plane)

@@ -71,3 +71,38 @@ def test_clear_storage(tmp_path) -> None:
     storage.clear_storage()
 
     assert storage.get_aeroplanes() == []
+
+
+def test_add_aeroplanes_adds_multiple_unique_records(tmp_path) -> None:
+    """Проверка пакетного добавления самолётов без дубликатов."""
+    storage = Processing()
+    storage._file_path = tmp_path / "aeroplanes.json"
+
+    added_count = storage.add_aeroplanes(
+        [
+            {
+                "callsign": "UAE41P",
+                "reg_country": "United Arab Emirates",
+                "velocity": 73.14,
+                "altitude": 68.58,
+            },
+            {
+                "callsign": "GFA2004",
+                "reg_country": "Bahrain",
+                "velocity": 555.57,
+                "altitude": 4145.28,
+            },
+            {
+                "callsign": "UAE41P",
+                "reg_country": "United Arab Emirates",
+                "velocity": 100.0,
+                "altitude": 1000.0,
+            },
+        ]
+    )
+
+    result = storage.get_aeroplanes()
+
+    assert added_count == 2
+    assert len(result) == 2
+    assert {item["callsign"] for item in result} == {"UAE41P", "GFA2004"}

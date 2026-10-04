@@ -1,5 +1,5 @@
 # src/processing.py
-"""Модуль классов операционистов"""
+""" Модуль классов операционистов. """
 
 import json
 from typing import Any
@@ -25,14 +25,17 @@ class Processing(BaseProcessing):
 
         return data
 
+
     def _write_all(self, data: list[dict[str, Any]]) -> None:
         """Функция записи данных в файл."""
         with self.file_path.open("w", encoding="utf-8") as f:
             json.dump(data, f, ensure_ascii=False, indent=2)
 
+
     def clear_storage(self) -> None:
         """Очищает данные локального хранилища."""
         self._write_all([])
+
 
     def add_aeroplane(self, aeroplane_data: dict[str, Any]) -> None:
         """Добавить запись о самолёте в JSON-файл, избегая дублей."""
@@ -48,6 +51,44 @@ class Processing(BaseProcessing):
 
         data.append(aeroplane_data)
         self._write_all(data)
+
+
+    def add_aeroplanes(self, aeroplanes_data: list[dict[str, Any]]) -> int:
+        """
+        Добавляет несколько самолётов в хранилище одной операцией.
+
+        Не добавляет дубликаты по связке callsign + reg_country.
+        Возвращает количество фактически добавленных записей.
+        """
+        data = self._read_all()
+
+        existing_keys = {
+            (
+                item.get("callsign"),
+                item.get("reg_country"),
+            )
+            for item in data
+        }
+
+        added_count = 0
+
+        for aeroplane_data in aeroplanes_data:
+            key = (
+                aeroplane_data.get("callsign"),
+                aeroplane_data.get("reg_country"),
+            )
+
+            if key in existing_keys:
+                continue
+
+            data.append(aeroplane_data)
+            existing_keys.add(key)
+            added_count += 1
+
+        self._write_all(data)
+
+        return added_count
+
 
     def get_aeroplanes(self, **criteria: Any) -> list[dict[str, Any]]:
         """
@@ -81,6 +122,7 @@ class Processing(BaseProcessing):
                 result.append(item)
 
         return result
+
 
     def delete_aeroplanes(self, **criteria: Any) -> None:
         """Удалить записи, которые удовлетворяют критериям."""

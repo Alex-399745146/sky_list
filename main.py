@@ -56,15 +56,22 @@ def load_aeroplanes(country: str, storage: Processing) -> None:
             description="Сохраняем данные в хранилище",
         )
 
-        for plane in aeroplanes:
-            storage.add_aeroplane(
-                {
-                    "callsign": plane.callsign,
-                    "reg_country": plane.reg_country,
-                    "velocity": plane.velocity,
-                    "altitude": plane.altitude,
-                }
-            )
+        aeroplanes_data = [
+            {
+                "callsign": plane.callsign,
+                "reg_country": plane.reg_country,
+                "velocity": plane.velocity,
+                "altitude": plane.altitude,
+            }
+            for plane in aeroplanes
+        ]
+
+        progress.update(
+            task_id,
+            description="Сохраняем данные в хранилище",
+        )
+
+        added_count = storage.add_aeroplanes(aeroplanes_data)
 
     if not aeroplanes:
         console.print(
@@ -78,7 +85,8 @@ def load_aeroplanes(country: str, storage: Processing) -> None:
 
     console.print(
         Panel(
-            f"[bold green]Успешно сохранено самолётов: {len(aeroplanes)}[/bold green]",
+            f"[bold green]Получено валидных записей: {len(aeroplanes)}[/bold green]\n"
+            f"[bold green]Добавлено в хранилище: {added_count}[/bold green]",
             title="Загрузка завершена",
             border_style="green",
         )

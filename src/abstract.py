@@ -105,3 +105,8 @@ class BaseProcessing(ABC):
     def clear_storage(self) -> None:
         """Очистить локальное хранилище данных."""
         raise NotImplementedError
+
+    @abstractmethod
+    def add_aeroplanes(self, aeroplanes_data: list[dict[str, Any]]) -> int:
+        """Добавить несколько записей о самолётах в хранилище."""
+        raise NotImplementedError

@@ -79,8 +79,8 @@ class Aeroplane(BaseAeroplane):
     @classmethod
     def get_filter_aeroplanes(cls, aeroplanes: dict[str, Any]) -> list["Aeroplane"]:
         """
-        Преобразует сырые данные из opensky (ключ 'states')
-        в список объектов Aeroplane.
+        Преобразует сырые данные OpenSky из ключа states
+        в список валидных объектов Aeroplane.
         """
         states = aeroplanes.get("states") or []
         result: list[Aeroplane] = []
@@ -98,11 +98,21 @@ class Aeroplane(BaseAeroplane):
                     velocity=velocity,
                     altitude=altitude,
                 )
-            except IndexError as e:
-                logger.warning("Некорректный формат записи state=%r: %s", state, e)
+
+            except IndexError as error:
+                logger.debug(
+                    "Некорректный формат записи state=%r: %s",
+                    state,
+                    error,
+                )
                 continue
-            except (TypeError, ValueError) as e:
-                logger.warning("Некорректные значения для Aeroplane из state=%r: %s", state, e)
+
+            except (TypeError, ValueError) as error:
+                logger.debug(
+                    "Некорректные значения для Aeroplane из state=%r: %s",
+                    state,
+                    error,
+                )
                 continue
 
             result.append(plane)
